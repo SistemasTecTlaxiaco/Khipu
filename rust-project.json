@@ -1,0 +1,18 @@
+{
+    "sysroot_src": null,
+    "crates": [
+        {
+            "root_module": "contracts/hello-world/src/lib.rs",
+            "edition": "2021",
+            "deps": [],
+            "cfg": [
+                "target_arch=\"wasm32\"",
+                "target_os=\"unknown\""
+            ],
+            "env": {
+                "CARGO_PKG_NAME": "hello-world"
+            },
+            "proc_macro_dylib_path": null
+        }
+    ]
+}

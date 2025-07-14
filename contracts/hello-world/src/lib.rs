@@ -188,7 +188,7 @@ impl KhipuContract {
         total
     }
     
-    /// Get khipu configuration
+    /// Get khipu configuration (weeks and admin)
     pub fn get_khipu_config(env: Env) -> (u32, Option<Address>) {
         let weeks: u32 = env
             .storage()
