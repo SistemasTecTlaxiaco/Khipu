@@ -1,0 +1,55 @@
+📱 KHIPU - GUÍA VISUAL RÁPIDA
+===========================================
+
+🎯 INSTALACIÓN EN 3 PASOS:
+
+1️⃣ DESCARGAR
+   git clone https://github.com/tu-usuario/Contrato-Proyecto.git
+   cd Contrato-Proyecto
+
+2️⃣ INSTALAR
+   npm install
+
+3️⃣ EJECUTAR
+   npm run mvp
+
+🌐 ABRIR: http://localhost:3000
+
+===================================
+
+🔧 COMANDOS PRINCIPALES:
+
+   npm start     ▶️ Ejecutar aplicación
+   npm run mvp   ▶️ Demo MVP 
+   npm run demo  ▶️ Igual que mvp
+   npm run help  ❓ Ver ayuda
+
+===================================
+
+📚 DOCUMENTACIÓN:
+
+   README.md              📋 Inicio
+   README_INSTALACION.md  📖 Guía completa
+   QUICK_START.md         ⚡ Comandos
+   README_MVP.md          🔧 Técnico
+
+===================================
+
+⚠️ PROBLEMAS COMUNES:
+
+❌ "npm not found"
+   → Instalar Node.js: https://nodejs.org
+
+❌ "Puerto 3000 en uso"  
+   → npx http-server . -p 8080 -o mvp-khipu.html --cors
+
+❌ Error de permisos
+   → sudo npm install (Linux/Mac)
+   → Ejecutar como administrador (Windows)
+
+===================================
+
+🆘 AYUDA:
+   📧 soporte@khipu.com
+   🐛 GitHub Issues
+   💬 npm run help

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khipu MVP - React + Firebase + Soroban</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK (v9 modular) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js'
+        import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js'
+        
+        // Store Firebase in window for access
+        window.firebaseApp = initializeApp({
+            // Demo config - replace with your Firebase config
+            apiKey: "demo-api-key",
+            authDomain: "khipu-demo.firebaseapp.com",
+            projectId: "khipu-demo"
+        });
+        
+        window.firebaseAuth = getAuth();
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.FacebookAuthProvider = FacebookAuthProvider;
+        window.signInWithPopup = signInWithPopup;
+    </script>
+    
+    <!-- Custom CSS -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .reputation-badge {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: bold;
+        }
+        
+        .contribution-item {
+            border-left: 4px solid #10b981;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .whatsapp-btn:hover {
+            background: #1DA851;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold">💰 Khipu MVP</h1>
+                    <span class="text-sm opacity-75">React + Firebase + Soroban</span>
+                </div>
+                <div id="nav-auth-section">
+                    <!-- Auth buttons will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Login Section (shown when not authenticated) -->
+        <div id="login-section" class="max-w-md mx-auto">
+            <div class="glass-card rounded-lg p-8 text-center">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">¡Bienvenido a Khipu!</h2>
+                <p class="text-gray-600 mb-8">Ahorra $10 semanales de forma segura y transparente usando blockchain</p>
+                
+                <div class="space-y-4">
+                    <button id="google-login-btn" class="w-full bg-red-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-600 transition-colors">
+                        🔍 Continuar con Google
+                    </button>
+                    
+                    <button id="facebook-login-btn" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        📘 Continuar con Facebook
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-500 mt-6">
+                    Al registrarte, automáticamente generamos una wallet Soroban segura para ti
+                </p>
+            </div>
+        </div>
+        
+        <!-- Dashboard Section (shown when authenticated) -->
+        <div id="dashboard-section" class="hidden">
+            <!-- User Info -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <img id="user-avatar" class="w-16 h-16 rounded-full" src="" alt="Avatar">
+                        <div>
+                            <h2 id="user-name" class="text-2xl font-bold text-gray-800"></h2>
+                            <p id="user-email" class="text-gray-600"></p>
+                            <p id="wallet-address" class="text-sm text-gray-500 font-mono"></p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Reputation Card -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700">Reputación</h3>
+                            <div id="reputation-display" class="mt-2">
+                                <span class="reputation-badge">Cargando...</span>
+                            </div>
+                        </div>
+                        <div class="text-3xl">🏆</div>
+                    </div>
+                </div>
+                
+                <!-- Total Contributed -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700">Total Ahorrado</h3>
+                            <p id="total-contributed" class="text-3xl font-bold text-green-600">$0</p>
+                        </div>
+                        <div class="text-3xl">💰</div>
+                    </div>
+                </div>
+                
+                <!-- Next Contribution -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700">Próxima Contribución</h3>
+                            <p id="next-contribution" class="text-lg text-gray-600">En 3 días</p>
+                        </div>
+                        <div class="text-3xl">📅</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contribution Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Make Contribution -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">💸 Contribuir Esta Semana</h3>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-lg font-semibold text-green-800">Monto Semanal:</span>
+                            <span class="text-2xl font-bold text-green-600">$10.00</span>
+                        </div>
+                        <p class="text-sm text-green-600 mt-1">Equivalente a ~10 USDC en Stellar testnet</p>
+                    </div>
+                    
+                    <button id="contribute-btn" class="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors pulse-animation">
+                        💰 Contribuir $10 Ahora
+                    </button>
+                    
+                    <div id="contribution-status" class="mt-4 p-3 rounded-lg hidden">
+                        <!-- Status messages will appear here -->
+                    </div>
+                </div>
+                
+                <!-- WhatsApp Invite -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">📲 Invita a tus Amigos</h3>
+                    
+                    <p class="text-gray-600 mb-4">
+                        ¡Comparte Khipu y ayuda a tus amigos a ahorrar de forma segura!
+                    </p>
+                    
+                    <div id="whatsapp-invite-section">
+                        <!-- WhatsApp invite buttons will be inserted here -->
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-sm text-blue-700">
+                            <strong>💡 Tip:</strong> Cada amigo que invites y contribuya te da puntos de reputación extra
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contribution History -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Historial de Contribuciones</h3>
+                
+                <div id="contribution-history" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <div class="text-4xl mb-2">📈</div>
+                        <p>Cargando historial...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tanda Participants -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">👥 Participantes de la Tanda</h3>
+                
+                <div id="participants-list" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <div class="text-4xl mb-2">👥</div>
+                        <p>Cargando participantes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-lg font-semibold">Procesando...</p>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-8 text-center max-w-md mx-4">
+            <div class="text-6xl mb-4">✅</div>
+            <h3 class="text-2xl font-bold text-green-600 mb-2">¡Contribución Exitosa!</h3>
+            <p class="text-gray-600 mb-4">Tu aporte de $10 ha sido registrado en la blockchain</p>
+            <button id="close-success-modal" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
+                Continuar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script type="module">
+        // Import services
+        import AuthService from './src/services/AuthService.js';
+        import ContractClient from './src/services/ContractClient.js';
+        import WhatsAppInvite from './src/components/WhatsAppInvite.js';
+        
+        // Initialize the MVP app
+        class KhipuMVP {
+            constructor() {
+                this.authService = AuthService;
+                this.contractClient = ContractClient;
+                this.whatsappInvite = new WhatsAppInvite();
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('🚀 Initializing Khipu MVP...');
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Setup auth state listener
+                this.authService.onAuthStateChanged((user) => {
+                    this.handleAuthStateChange(user);
+                });
+            }
+            
+            setupEventListeners() {
+                // Login buttons
+                document.getElementById('google-login-btn')?.addEventListener('click', () => {
+                    this.handleGoogleLogin();
+                });
+                
+                document.getElementById('facebook-login-btn')?.addEventListener('click', () => {
+                    this.handleFacebookLogin();
+                });
+                
+                // Logout button
+                document.getElementById('logout-btn')?.addEventListener('click', () => {
+                    this.handleLogout();
+                });
+                
+                // Contribute button
+                document.getElementById('contribute-btn')?.addEventListener('click', () => {
+                    this.handleContribution();
+                });
+                
+                // Modal close buttons
+                document.getElementById('close-success-modal')?.addEventListener('click', () => {
+                    document.getElementById('success-modal').classList.add('hidden');
+                });
+            }
+            
+            async handleGoogleLogin() {
+                try {
+                    this.showLoading(true);
+                    const user = await this.authService.loginWithGoogle();
+                    console.log('✅ Google login successful', user);
+                } catch (error) {
+                    console.error('❌ Google login failed', error);
+                    alert('Error al iniciar sesión con Google');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            async handleFacebookLogin() {
+                try {
+                    this.showLoading(true);
+                    const user = await this.authService.loginWithFacebook();
+                    console.log('✅ Facebook login successful', user);
+                } catch (error) {
+                    console.error('❌ Facebook login failed', error);
+                    alert('Error al iniciar sesión con Facebook');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            async handleLogout() {
+                try {
+                    await this.authService.logout();
+                    console.log('👋 Logout successful');
+                } catch (error) {
+                    console.error('❌ Logout failed', error);
+                }
+            }
+            
+            async handleContribution() {
+                try {
+                    this.showLoading(true);
+                    
+                    const wallet = await this.authService.getSorobanWallet();
+                    if (!wallet) {
+                        throw new Error('No se pudo obtener la wallet');
+                    }
+                    
+                    const result = await this.contractClient.makeWeeklyContribution(wallet);
+                    
+                    if (result.success) {
+                        this.showSuccessModal();
+                        this.loadDashboardData(); // Refresh data
+                    } else {
+                        throw new Error(result.error);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Contribution failed', error);
+                    this.showStatus('contribution-status', 'error', 'Error: ' + error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            async handleAuthStateChange(user) {
+                if (user) {
+                    // User is logged in
+                    this.showSection('dashboard');
+                    this.displayUserInfo(user);
+                    await this.loadDashboardData();
+                } else {
+                    // User is logged out
+                    this.showSection('login');
+                }
+            }
+            
+            showSection(section) {
+                // Hide all sections
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.add('hidden');
+                
+                // Show selected section
+                if (section === 'login') {
+                    document.getElementById('login-section').classList.remove('hidden');
+                } else if (section === 'dashboard') {
+                    document.getElementById('dashboard-section').classList.remove('hidden');
+                }
+            }
+            
+            async displayUserInfo(user) {
+                document.getElementById('user-name').textContent = user.displayName;
+                document.getElementById('user-email').textContent = user.email;
+                document.getElementById('user-avatar').src = user.photoURL;
+                
+                // Get wallet info
+                const wallet = await this.authService.getSorobanWallet();
+                if (wallet) {
+                    document.getElementById('wallet-address').textContent = 
+                        `Wallet: ${wallet.publicKey.substring(0, 8)}...${wallet.publicKey.slice(-8)}`;
+                }
+            }
+            
+            async loadDashboardData() {
+                const user = this.authService.getCurrentUser();
+                if (!user) return;
+                
+                const wallet = await this.authService.getSorobanWallet();
+                if (!wallet) return;
+                
+                // Load reputation
+                const reputation = await this.contractClient.getReputationScore(wallet.publicKey);
+                this.displayReputation(reputation);
+                
+                // Load contribution history
+                const history = await this.contractClient.getContributionHistory(wallet.publicKey);
+                this.displayContributionHistory(history);
+                
+                // Load participants
+                const participants = await this.contractClient.getTandaParticipants();
+                this.displayParticipants(participants);
+                
+                // Setup WhatsApp invite
+                this.whatsappInvite.initializeComponent('whatsapp-invite-section', user.email, user.displayName);
+            }
+            
+            displayReputation(reputation) {
+                if (!reputation) return;
+                
+                const completionRate = reputation.completionRate;
+                let badge = '';
+                let color = '';
+                
+                if (reputation.level === 'Aplus') {
+                    badge = 'A+ ⭐';
+                    color = 'bg-yellow-500';
+                } else if (reputation.level === 'A') {
+                    badge = 'A 🟢';
+                    color = 'bg-green-500';
+                } else if (reputation.level === 'B') {
+                    badge = 'B 🔵';
+                    color = 'bg-blue-500';
+                } else if (reputation.level === 'C') {
+                    badge = 'C 🟡';
+                    color = 'bg-yellow-600';
+                } else {
+                    badge = 'D 🔴';
+                    color = 'bg-red-500';
+                }
+                
+                document.getElementById('reputation-display').innerHTML = `
+                    <span class="reputation-badge ${color}">${badge}</span>
+                    <p class="text-sm text-gray-600 mt-1">${completionRate}% completado (${reputation.on_time}/${reputation.total})</p>
+                `;
+                
+                document.getElementById('total-contributed').textContent = `$${reputation.totalContributed}`;
+            }
+            
+            displayContributionHistory(history) {
+                const container = document.getElementById('contribution-history');
+                
+                if (history.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="text-4xl mb-2">📊</div>
+                            <p>Aún no has hecho contribuciones</p>
+                            <p class="text-sm mt-2">¡Haz tu primera contribución de $10!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = history.map(contribution => `
+                    <div class="contribution-item bg-gray-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-semibold">Semana ${contribution.week}</span>
+                                    <span class="text-green-600 font-bold">$${contribution.amount}</span>
+                                    ${contribution.onTime ? '<span class="text-green-500">✅ A tiempo</span>' : '<span class="text-red-500">⏰ Tardía</span>'}
+                                </div>
+                                <p class="text-sm text-gray-500">${new Date(contribution.date).toLocaleDateString()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-500">TX: ${contribution.txHash.substring(0, 8)}...</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            displayParticipants(participants) {
+                const container = document.getElementById('participants-list');
+                
+                container.innerHTML = participants.map(participant => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                ${participant.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="font-semibold">${participant.name}</p>
+                                <p class="text-sm text-gray-500">${participant.contributions} contribuciones</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="reputation-badge bg-green-500">${participant.reputation}</span>
+                            <p class="text-sm text-gray-500 mt-1">$${participant.totalAmount}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            showStatus(containerId, type, message) {
+                const container = document.getElementById(containerId);
+                const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 
+                               type === 'error' ? 'bg-red-100 border-red-400 text-red-700' : 
+                               'bg-blue-100 border-blue-400 text-blue-700';
+                
+                container.innerHTML = `<p class="border-l-4 p-3 ${bgColor}">${message}</p>`;
+                container.classList.remove('hidden');
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 5000);
+            }
+            
+            showLoading(show) {
+                const overlay = document.getElementById('loading-overlay');
+                if (show) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
+            
+            showSuccessModal() {
+                document.getElementById('success-modal').classList.remove('hidden');
+            }
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.khipuApp = new KhipuMVP();
+        });
+    </script>
+</body>
+</html>

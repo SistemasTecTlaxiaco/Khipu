@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <title>Stellar Wallet</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --soft-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --success-gradient: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            --error-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-light: #718096;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+        }
+
+        /* Header */
+        header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.8rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+
+        nav a:hover::before,
+        nav a.active::before {
+            left: 0;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Main Container */
+        .wallet-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 30px;
+        }
+
+        /* Card Base Style */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            transition: height 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover::before {
+            height: 6px;
+        }
+
+        /* Login Section */
+        .login-card {
+            text-align: center;
+            animation: cardFloat 6s ease-in-out infinite;
+        }
+
+        .wallet-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .wallet-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            color: white;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 24px;
+            font-size: 1rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            min-width: 140px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 28px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 28px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-send {
+            background: var(--secondary-gradient);
+            box-shadow: 0 4px 16px rgba(240, 147, 251, 0.3);
+        }
+
+        .btn-send:hover {
+            box-shadow: 0 8px 28px rgba(240, 147, 251, 0.4);
+        }
+
+        /* Wallet Section */
+        .wallet-info {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            word-break: break-all;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        /* Send Section */
+        .send-section {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            margin-top: 24px;
+        }
+
+        .send-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 24px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Messages */
+        .message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-top: 16px;
+            font-weight: 500;
+            border: 1px solid transparent;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error {
+            background: var(--error-gradient);
+            color: #721c24;
+            border-color: rgba(220, 38, 127, 0.3);
+        }
+
+        .success {
+            background: var(--success-gradient);
+            color: #065f46;
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            nav {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .wallet-container {
+                padding: 0 20px;
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            .wallet-title {
+                font-size: 1.6rem;
+            }
+
+            .send-section {
+                padding: 20px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-particles"></div>
+    
+    <header>
+        <h1>💎 WALLET Stellar</h1>
+        <nav>
+            <a href="Inicio.html">🏠 Inicio</a>
+            <a href="cursos.html">📚 Cursos</a>
+            <a href="#">🎯 Niveles</a>
+            <a href="materias.html">📖 Materias</a>
+            <a href="cetificado.html">🏆 Certificados</a>
+            <a href="Wallet.html" class="active">💎 Wallet</a>
+            <a href="Moneda.html">🪙 Moneda</a>
+        </nav>
+    </header>
+
+    <div class="wallet-container" id="wallet-container">
+        <div id="login-section" class="card login-card">
+            <h2 class="wallet-title">🚀 Conectar Wallet</h2>
+            <p class="wallet-subtitle">Ingresa tu clave secreta de Stellar para comenzar</p>
+            
+            <div class="form-group">
+                <label for="secret-key" class="form-label">🔐 Clave Secreta de Stellar</label>
+                <input type="password" id="secret-key" class="form-input" placeholder="Clave Secreta (S...)" autocomplete="off" />
+            </div>
+            
+            <button id="connect-wallet-btn" class="btn btn-primary">
+                🌟 Conectar Wallet
+            </button>
+
+            <div id="login-error" class="message error hidden"></div>
+        </div>
+
+        <div id="wallet-section" class="card hidden">
+            <h2 class="wallet-title">💼 Tu Wallet Stellar</h2>
+            
+            <div class="wallet-info">
+                <div class="info-item">
+                    <div class="info-label">🔑 Clave Pública</div>
+                    <div class="info-value" id="public-key"></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">💰 Balance</div>
+                    <div class="info-value" id="balance">Loading...</div>
+                </div>
+            </div>
+
+            <button id="refresh-balance-btn" class="btn btn-secondary">
+                🔄 Actualizar Balance
+            </button>
+
+            <div class="send-section">
+                <h3 class="send-title">💸 Enviar Lumens (XLM)</h3>
+                
+                <div class="form-group">
+                    <label for="destination" class="form-label">🎯 Cuenta de Destino</label>
+                    <input type="text" id="destination" class="form-input" placeholder="Clave pública de destino (G...)" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount" class="form-label">💎 Cantidad (XLM)</label>
+                    <input type="number" id="amount" class="form-input" placeholder="ej. 10" min="0.000001" step="0.000001" />
+                </div>
+                
+                <button id="send-btn" class="btn btn-send">
+                    ⚡ Enviar
+                </button>
+                
+                <div id="send-error" class="message error hidden"></div>
+                <div id="send-success" class="message success hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        🌟 Construido con el <a href="https://www.stellar.org/developers" target="_blank" rel="noopener">Stellar JavaScript SDK</a>. Usa solo claves de testnet.
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/10.8.0/stellar-sdk.min.js"></script>
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const container = document.querySelector('.bg-particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Initialize particles
+        createParticles();
+
+        // Add parallax effect
+        document.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.bg-particles');
+            const speed = scrolled * 0.3;
+            parallax.style.transform = `translateY(${speed}px)`;
+        });
+
+        (() => {
+            const SecretKeyInput = document.getElementById('secret-key');
+            const ConnectWalletBtn = document.getElementById('connect-wallet-btn');
+            const LoginError = document.getElementById('login-error');
+
+            const WalletSection = document.getElementById('wallet-section');
+            const LoginSection = document.getElementById('login-section');
+
+            const PublicKeyDisplay = document.getElementById('public-key');
+            const BalanceDisplay = document.getElementById('balance');
+            const RefreshBalanceBtn = document.getElementById('refresh-balance-btn');
+
+            const DestinationInput = document.getElementById('destination');
+            const AmountInput = document.getElementById('amount');
+            const SendBtn = document.getElementById('send-btn');
+            const SendError = document.getElementById('send-error');
+            const SendSuccess = document.getElementById('send-success');
+
+            const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+            StellarSdk.Networks.TESTNET;
+
+            let keypair = null;
+
+            function validateSecretKey(key) {
+                try {
+                    const kp = StellarSdk.Keypair.fromSecret(key);
+                    return kp;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            async function loadAccountBalance(publicKey) {
+                try {
+                    const account = await server.loadAccount(publicKey);
+                    const nativeBalance = account.balances.find(b => b.asset_type === 'native');
+                    let balanceText = nativeBalance ? `${nativeBalance.balance} XLM` : '0 XLM';
+                    BalanceDisplay.textContent = balanceText;
+                } catch (err) {
+                    BalanceDisplay.textContent = 'Cuenta no encontrada o sin fondos.';
+                }
+            }
+
+            ConnectWalletBtn.addEventListener('click', async () => {
+                const secret = SecretKeyInput.value.trim();
+                LoginError.classList.add('hidden');
+                SendError.classList.add('hidden');
+                SendSuccess.classList.add('hidden');
+
+                // Check if should redirect to moneda.html
+                if (secret === '' || secret.toLowerCase() === 'redirect') {
+                    window.location.href = 'moneda.html';
+                    return;
+                }
+
+                const validKeypair = validateSecretKey(secret);
+                if (!validKeypair) {
+                    LoginError.textContent = '❌ Clave secreta de Stellar inválida.';
+                    LoginError.classList.remove('hidden');
+                    return;
+                }
+
+                // Show loading state
+                ConnectWalletBtn.innerHTML = '<div class="loading"></div> Conectando...';
+                ConnectWalletBtn.disabled = true;
+
+                try {
+                    keypair = validKeypair;
+                    PublicKeyDisplay.textContent = keypair.publicKey();
+                    
+                    setTimeout(() => {
+                        LoginSection.classList.add('hidden');
+                        WalletSection.classList.remove('hidden');
+                        BalanceDisplay.textContent = 'Cargando...';
+                        loadAccountBalance(keypair.publicKey());
+                    }, 1000);
+                } catch (error) {
+                    LoginError.textContent = '❌ Error al conectar la wallet.';
+                    LoginError.classList.remove('hidden');
+                } finally {
+                    setTimeout(() => {
+                        ConnectWalletBtn.innerHTML = '🌟 Conectar Wallet';
+                        ConnectWalletBtn.disabled = false;
+                    }, 1000);
+                }
+            });
+
+            RefreshBalanceBtn.addEventListener('click', async () => {
+                if (!keypair) return;
+                
+                RefreshBalanceBtn.innerHTML = '<div class="loading"></div> Actualizando...';
+                RefreshBalanceBtn.disabled = true;
+                BalanceDisplay.textContent = 'Cargando...';
+                
+                setTimeout(async () => {
+                    await loadAccountBalance(keypair.publicKey());
+                    RefreshBalanceBtn.innerHTML = '🔄 Actualizar Balance';
+                    RefreshBalanceBtn.disabled = false;
+                }, 1000);
+            });
+
+            SendBtn.addEventListener('click', async () => {
+                SendError.classList.add('hidden');
+                SendSuccess.classList.add('hidden');
+
+                if (!keypair) {
+                    SendError.textContent = '❌ Conecta tu wallet primero.';
+                    SendError.classList.remove('hidden');
+                    return;
+                }
+
+                const destination = DestinationInput.value.trim();
+                const amount = AmountInput.value.trim();
+
+                if (!StellarSdk.StrKey.isValidEd25519PublicKey(destination)) {
+                    SendError.textContent = '❌ Clave pública de destino inválida.';
+                    SendError.classList.remove('hidden');
+                    return;
+                }
+                if (isNaN(amount) || Number(amount) <= 0) {
+                    SendError.textContent = '❌ Por favor ingresa una cantidad válida mayor a 0.';
+                    SendError.classList.remove('hidden');
+                    return;
+                }
+
+                SendBtn.disabled = true;
+                SendBtn.innerHTML = '<div class="loading"></div> Enviando...';
+
+                try {
+                    const sourceKeypair = keypair;
+                    const account = await server.loadAccount(sourceKeypair.publicKey());
+                    const fee = await server.fetchBaseFee();
+
+                    const transaction = new StellarSdk.TransactionBuilder(account, {
+                        fee,
+                        networkPassphrase: StellarSdk.Networks.TESTNET
+                    })
+                        .addOperation(StellarSdk.Operation.payment({
+                            destination: destination,
+                            asset: StellarSdk.Asset.native(),
+                            amount: amount
+                        }))
+                        .setTimeout(30)
+                        .build();
+
+                    transaction.sign(sourceKeypair);
+
+                    const result = await server.submitTransaction(transaction);
+
+                    SendSuccess.textContent = `✅ ¡Pago exitoso! Hash de TX: ${result.hash}`;
+                    SendSuccess.classList.remove('hidden');
+
+                    // Clear form
+                    DestinationInput.value = '';
+                    AmountInput.value = '';
+
+                    await loadAccountBalance(sourceKeypair.publicKey());
+                } catch (err) {
+                    SendError.textContent = '❌ Transacción falló: ' + (err.response?.data?.extras?.result_codes?.transaction || err.message || err);
+                    SendError.classList.remove('hidden');
+                } finally {
+                    SendBtn.disabled = false;
+                    SendBtn.innerHTML = '⚡ Enviar';
+                }
+            });
+
+            // Add Enter key support for inputs
+            SecretKeyInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    ConnectWalletBtn.click();
+                }
+            });
+
+            AmountInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    SendBtn.click();
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inicio de Sesión - Stellar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@500&display=swap" rel="stylesheet">
+  <!-- Stellar SDK -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/11.2.2/stellar-sdk.min.js"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-400 to-blue-600 text-gray-800 min-h-screen flex items-center justify-center">
+  
+  <div class="max-w-md mx-auto p-10 bg-white rounded-lg shadow-lg">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6 font-Montserrat">Inicio de Sesión</h1>
+    
+    <!-- Estado de conexión de wallet -->
+    <div id="walletStatus" class="mb-4 p-3 rounded-lg text-center hidden">
+      <p id="walletAddress" class="text-sm font-mono"></p>
+    </div>
+    
+    <form id="loginForm" class="space-y-6">
+      <div>
+        <label for="username" class="block text-lg font-medium text-gray-700 font-Roboto">Nombre de usuario</label>
+        <input id="username" type="text" placeholder="Ingrese su nombre de usuario" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" required />
+      </div>
+
+      <!-- Sección para crear/cargar cuenta Stellar manual -->
+      <div id="stellarAccountSection" class="mt-4 p-4 bg-blue-50 rounded-lg">
+        <h3 class="text-base font-semibold mb-2">Cuenta Stellar Testnet</h3>
+        <div class="flex flex-col gap-2">
+          <button id="crearCuenta" type="button" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition">
+            Crear y financiar cuenta
+          </button>
+          <label class="block">
+            <span class="text-sm">Clave secreta de cuenta (S...):</span>
+            <input type="text" id="claveSecretaManual" class="w-full border border-gray-300 p-2 rounded mt-1" placeholder="S..." />
+          </label>
+          <label class="block mt-2">
+            <span class="text-sm">Clave pública de cuenta (G...):</span>
+            <input type="text" id="clavePublicaManual" class="w-full border border-gray-300 p-2 rounded mt-1 bg-gray-100" placeholder="G..." readonly />
+          </label>
+          <button id="usarCuentaExistente" type="button" class="bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600 transition">
+            Usar cuenta existente
+          </button>
+          <div id="stellarAccountInfo" class="text-xs font-mono text-gray-700 whitespace-pre-wrap mt-2"></div>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-lg font-medium text-gray-700 font-Roboto">Cargar Imagen (Contraseña)</label>
+        <div id="imageUpload" class="border-2 border-dashed border-blue-400 rounded-lg p-6 text-center cursor-pointer hover:bg-blue-50 transition duration-200">
+          <p class="text-gray-600">Arrastra y suelta una imagen aquí o haz clic para seleccionar</p>
+          <input type="file" accept="image/*" class="hidden" required />
+        </div>
+      </div>
+      
+      <div class="flex justify-center mt-4">
+        <button type="submit" id="loginBtn" disabled class="bg-gray-400 text-white px-6 py-3 rounded-lg transition transform disabled:cursor-not-allowed">
+          Conectar
+        </button>
+      </div>
+    </form>
+
+    <!-- Sección de acciones del contrato -->
+    <div id="contractActions" class="mt-6 hidden">
+      <h3 class="text-lg font-semibold mb-4">Acciones del Contrato</h3>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="getUserBtn" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition">
+          Obtener Usuario
+        </button>
+        <button id="editUserBtn" class="bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600 transition">
+          Editar Usuario
+        </button>
+        <button id="deleteUserBtn" class="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition">
+          Eliminar Usuario
+        </button>
+        <button id="insertUserBtn" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition">
+          Insertar Usuario
+        </button>
+      </div>
+    </div>
+
+    <div id="result" class="mt-6 text-sm font-mono text-gray-700 whitespace-pre-wrap p-3 bg-gray-100 rounded hidden"></div>
+  </div>
+
+  <script>
+    // Variables del contrato
+    const CONTRACT_ID = 'CDS3VGIAZFIZUG3GL6LWAXLOXWCRIIBDPPRS4225LLLEHPGTFDNF4PQK';
+    const RPC_URL = 'https://rpc-futurenet.stellar.org';
+    
+    // Variables globales
+    let connectedWallet = null;
+    let publicKey = null;
+
+    // Variables para la cuenta Stellar manual
+    let ultimaClavePublica = null;
+    let ultimaClaveSecreta = null;
+    let modoManual = false; // Si el usuario usa cuenta manual
+
+    // Elementos del DOM
+    const imageUploadDiv = document.getElementById('imageUpload');
+    const fileInput = imageUploadDiv.querySelector('input[type="file"]');
+    const walletStatus = document.getElementById('walletStatus');
+    const walletAddress = document.getElementById('walletAddress');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginForm = document.getElementById('loginForm');
+    const contractActions = document.getElementById('contractActions');
+    const result = document.getElementById('result');
+    // Stellar manual
+    const crearCuentaBtn = document.getElementById('crearCuenta');
+    const usarCuentaExistenteBtn = document.getElementById('usarCuentaExistente');
+    const claveSecretaManualInput = document.getElementById('claveSecretaManual');
+    const clavePublicaManualInput = document.getElementById('clavePublicaManual');
+    const stellarAccountInfo = document.getElementById('stellarAccountInfo');
+
+    // Crear y financiar cuenta Stellar Testnet
+    crearCuentaBtn.addEventListener('click', async () => {
+      stellarAccountInfo.textContent = "Generando claves...";
+      const StellarSdk = window.StellarSdk;
+      if (!StellarSdk) {
+        stellarAccountInfo.textContent = "No se pudo cargar StellarSdk.";
+        return;
+      }
+      const pair = StellarSdk.Keypair.random();
+      const publicKeyGen = pair.publicKey();
+      const secretKey = pair.secret();
+      ultimaClavePublica = publicKeyGen;
+      ultimaClaveSecreta = secretKey;
+      stellarAccountInfo.textContent = `Public Key: ${publicKeyGen}\nSecret Key: ${secretKey}\n\nFinanciando cuenta...`;
+      try {
+        const response = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(publicKeyGen)}`);
+        const responseJSON = await response.json();
+        stellarAccountInfo.textContent += `\n✅ Cuenta financiada\n${JSON.stringify(responseJSON, null, 2)}\n`;
+        // Mostrar balance
+        const server = new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org");
+        const account = await server.loadAccount(publicKeyGen);
+        stellarAccountInfo.textContent += `\n🔍 Balances:\n`;
+        account.balances.forEach((balance) => {
+          stellarAccountInfo.textContent += `Asset: ${balance.asset_type}, Balance: ${balance.balance}\n`;
+        });
+        // Activar modo manual y habilitar login
+        modoManual = true;
+        connectedWallet = publicKeyGen;
+        publicKey = publicKeyGen;
+        walletAddress.textContent = `Cuenta manual: ${publicKeyGen.substring(0, 10)}...${publicKeyGen.substring(publicKeyGen.length - 10)}`;
+        walletStatus.classList.remove('hidden');
+        walletStatus.classList.add('bg-yellow-100', 'text-yellow-800');
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('bg-gray-400');
+        loginBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'hover:scale-105');
+      } catch (error) {
+        stellarAccountInfo.textContent += `\n❌ Error al crear/fondear cuenta:\n${error}`;
+      }
+    });
+
+    // Usar cuenta existente with secret key
+    usarCuentaExistenteBtn.addEventListener('click', async () => {
+      const claveSecreta = claveSecretaManualInput.value.trim();
+      stellarAccountInfo.textContent = "";
+      const StellarSdk = window.StellarSdk;
+      if (!claveSecreta.startsWith("S") || claveSecreta.length < 10) {
+        stellarAccountInfo.textContent = "Clave secreta inválida.";
+        return;
+      }
+      try {
+        const pair = StellarSdk.Keypair.fromSecret(claveSecreta);
+        ultimaClavePublica = pair.publicKey();
+        clavePublicaManualInput.value = ultimaClavePublica;
+        stellarAccountInfo.textContent = `Cuenta cargada:\nPublic Key: ${ultimaClavePublica}\nSecret Key: ${ultimaClaveSecreta}\n`;
+        // Mostrar balance
+        const server = new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org");
+        const account = await server.loadAccount(ultimaClavePublica);
+        stellarAccountInfo.textContent += `\n🔍 Balances:\n`;
+        account.balances.forEach((balance) => {
+          stellarAccountInfo.textContent += `Asset: ${balance.asset_type}, Balance: ${balance.balance}\n`;
+        });
+        // Activar modo manual y habilitar login
+        modoManual = true;
+        connectedWallet = ultimaClavePublica;
+        publicKey = ultimaClavePublica;
+        walletAddress.textContent = `Cuenta manual: ${ultimaClavePublica.substring(0, 10)}...${ultimaClavePublica.substring(ultimaClavePublica.length - 10)}`;
+        walletStatus.classList.remove('hidden');
+        walletStatus.classList.add('bg-yellow-100', 'text-yellow-800');
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('bg-gray-400');
+        loginBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'hover:scale-105');
+      } catch (error) {
+        stellarAccountInfo.textContent = "Error al cargar la cuenta: " + error;
+      }
+    });
+
+    // Función para mostrar resultados
+    function showResult(message, type = 'info') {
+      result.textContent = message;
+      result.classList.remove('hidden');
+      result.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+      if (type === 'success') {
+        result.classList.add('bg-green-100', 'text-green-800');
+      } else if (type === 'error') {
+        result.classList.add('bg-red-100', 'text-red-800');
+      } else {
+        result.classList.add('bg-blue-100', 'text-blue-800');
+      }
+    }
+
+    // Ejecutar acciones del contrato (simulado)
+    async function ejecutarAccion(accion) {
+      const username = document.getElementById('username').value.trim();
+      if (!username) {
+        alert('El nombre de usuario es obligatorio');
+        return;
+      }
+      if (!connectedWallet) {
+        alert('Por favor, conecta tu cuenta primero');
+        return;
+      }
+      showResult(`Ejecutando acción: ${accion}...`, 'info');
+      try {
+        // Aquí integrarías con Soroban
+        const simulatedResponse = {
+          insert_user: `Usuario "${username}" insertado correctamente`,
+          get_user: `Usuario encontrado: ${username}\nWallet: ${publicKey}`,
+          edit_user: `Usuario "${username}" editado correctamente`,
+          delete_user: `Usuario "${username}" eliminado correctamente`
+        };
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        showResult(`✓ ${simulatedResponse[accion]}`, 'success');
+      } catch (error) {
+        console.error('Error ejecutando acción:', error);
+        showResult(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Manejo de imagen
+    imageUploadDiv.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        imageUploadDiv.querySelector('p').textContent = `✓ ${file.name}`;
+        imageUploadDiv.classList.add('bg-green-50', 'border-green-400');
+      }
+    });
+    imageUploadDiv.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      imageUploadDiv.classList.add('bg-blue-100');
+    });
+    imageUploadDiv.addEventListener('dragleave', () => {
+      imageUploadDiv.classList.remove('bg-blue-100');
+    });
+    imageUploadDiv.addEventListener('drop', (event) => {
+      event.preventDefault();
+      imageUploadDiv.classList.remove('bg-blue-100');
+      const file = event.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        fileInput.files = event.dataTransfer.files;
+        imageUploadDiv.querySelector('p').textContent = `✓ ${file.name}`;
+        imageUploadDiv.classList.add('bg-green-50', 'border-green-400');
+      }
+    });
+
+    // Formulario de login
+    loginForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const imageFile = fileInput.files[0];
+      if (!imageFile) {
+        alert('Por favor, carga una imagen.');
+        return;
+      }
+      if (!connectedWallet) {
+        alert('Por favor, crea o carga una cuenta primero.');
+        return;
+      }
+      // Guarda las claves en localStorage
+      localStorage.setItem('stellarSecret', ultimaClaveSecreta);
+      localStorage.setItem('stellarPublic', ultimaClavePublica);
+
+      showResult(`✓ Conexión exitosa para ${username}\nCuenta: ${connectedWallet}`, 'success');
+      setTimeout(() => {
+        window.location.href = "inicio.html";
+      }, 1000);
+    });
+
+    // Botones de acciones del contrato
+    document.getElementById('getUserBtn').addEventListener('click', () => ejecutarAccion('get_user'));
+    document.getElementById('editUserBtn').addEventListener('click', () => ejecutarAccion('edit_user'));
+    document.getElementById('deleteUserBtn').addEventListener('click', () => ejecutarAccion('delete_user'));
+    document.getElementById('insertUserBtn').addEventListener('click', () => ejecutarAccion('insert_user'));
+
+    // Al cargar la página, intentar conectar con la cuenta Stellar si las claves están en localStorage
+    window.addEventListener('load', () => {
+      const secretKey = localStorage.getItem('stellarSecret');
+      const publicKey = localStorage.getItem('stellarPublic');
+      if (!secretKey || !publicKey) {
+          alert("No se encontró la cuenta Stellar logueada.");
+          return;
+      }
+      claveSecretaManualInput.value = secretKey;
+      usarCuentaExistenteBtn.click();
+    });
+  </script>
+</body>
+</html>

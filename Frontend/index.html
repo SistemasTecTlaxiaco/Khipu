@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khipu - Ahorro Grupal</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            min-height: 100vh;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="text-center text-white fade-in">
+        <div class="mb-8">
+            <h1 class="text-6xl font-bold mb-4 font-poppins">💰 Khipu</h1>
+            <p class="text-xl opacity-90">Sistema de Ahorro Grupal Descentralizado con Soroban</p>
+        </div>
+        
+        <div class="mb-8">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-lg">Iniciando aplicación...</p>
+        </div>
+        
+        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
+            <p class="text-sm opacity-80 mb-2">🚀 Características de la plataforma:</p>
+            <ul class="text-sm text-left space-y-1 opacity-90">
+                <li>• Gestión de estudiantes y docentes</li>
+                <li>• Cursos y materias en blockchain</li>
+                <li>• Certificados verificables</li>
+                <li>• Integración con Freighter Wallet</li>
+                <li>• Contratos inteligentes Soroban</li>
+            </ul>
+        </div>
+        
+        <div class="mt-8">
+            <button onclick="goToApp()" class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-white font-medium py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 border border-white border-opacity-30">
+                🔗 Acceder a la Academia
+            </button>
+        </div>
+        
+        <div class="mt-6 text-xs opacity-70">
+            <p>Powered by Stellar Soroban • Versión 1.0.0</p>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Función para ir a la aplicación principal
+        function goToApp() {
+            window.location.href = './Inicio.html';
+        }
+        
+        // Auto-redirección después de 3 segundos
+        setTimeout(() => {
+            console.log('🎯 Redirigiendo a la aplicación principal...');
+            goToApp();
+        }, 3000);
+        
+        // Verificar si Freighter está disponible
+        window.addEventListener('load', () => {
+            if (typeof window.freighterApi !== 'undefined') {
+                console.log('✅ Freighter Wallet detectado');
+            } else {
+                console.log('⚠️ Freighter Wallet no detectado - instalar desde https://freighter.app/');
+            }
+        });
+    </script>
+</body>
+</html>

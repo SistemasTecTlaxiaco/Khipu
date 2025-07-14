@@ -1,0 +1,42 @@
+{
+  "name": "khipu-dapp",
+  "version": "1.0.0",
+  "description": "Khipu - Sistema de Ahorro Grupal Descentralizado con Soroban Smart Contracts",
+  "main": "Frontend/khipu-app.js",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -o mvp-khipu.html --cors",
+    "dev": "npx http-server . -p 3000 -o mvp-khipu.html --cors",
+    "build": "npm run compile-contract",
+    "serve": "npx http-server . -p 8080 -a localhost -o",
+    "compile-contract": "CARGO_TARGET_DIR=/tmp/cargo-target cargo build --target wasm32-unknown-unknown --release && cp /tmp/cargo-target/wasm32-unknown-unknown/release/hello_world.wasm ./",
+    "test-contract": "CARGO_TARGET_DIR=/tmp/cargo-target cargo test",
+    "mvp": "npx http-server . -p 3000 -o mvp-khipu.html --cors",
+    "original": "npx http-server Frontend -p 3000 -o khipu.html --cors",
+    "setup": "npm install && npm run compile-contract",
+    "demo": "npm run mvp",
+    "clean": "rm -rf node_modules target /tmp/cargo-target && npm install",
+    "full-setup": "npm run setup && npm run test-contract && npm run demo",
+    "help": "echo 'Comandos disponibles:\n npm start - Ejecutar aplicación\n npm run mvp - Demo MVP\n npm run setup - Instalación completa\n npm run demo - Solo demo\n npm run help - Esta ayuda'"
+  },
+  "dependencies": {
+    "@stellar/freighter-api": "^4.1.0",
+    "@stellar/stellar-sdk": "^12.0.0",
+    "soroban-client": "^1.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "keywords": [
+    "soroban",
+    "stellar",
+    "blockchain",
+    "dapp",
+    "khipu",
+    "savings",
+    "group-savings",
+    "finance"
+  ],
+  "author": "Academia Blockchain",
+  "license": "MIT"
+}
