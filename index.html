@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khipu - Sistema de Ahorro Grupal Descentralizado</title>
+    <meta http-equiv="refresh" content="0; url=./mvp-khipu.html">
+    <link rel="canonical" href="./mvp-khipu.html">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .loading {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏛️ Khipu</div>
+        <div class="description">
+            Sistema de Ahorro Grupal Descentralizado<br>
+            Powered by Stellar Soroban Smart Contracts
+        </div>
+        <div class="spinner"></div>
+        <div class="loading">Redirigiendo a la aplicación...</div>
+        <a href="./mvp-khipu.html" class="button">Ir a Khipu</a>
+    </div>
+    
+    <script>
+        // Redirección automática después de 2 segundos
+        setTimeout(() => {
+            window.location.href = './mvp-khipu.html';
+        }, 2000);
+    </script>
+</body>
+</html>

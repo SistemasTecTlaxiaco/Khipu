@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "name": "khipu-dapp",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "."
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/mvp-khipu.html",
+      "dest": "/mvp-khipu.html"
+    },
+    {
+      "src": "/khipu.html",
+      "dest": "/Frontend/khipu.html"
+    },
+    {
+      "src": "/khipu-app.js",
+      "dest": "/Frontend/khipu-app.js"
+    },
+    {
+      "src": "/config.js",
+      "dest": "/Frontend/config.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/mvp-khipu.html"
+    }
+  ],
+  "functions": {
+    "Frontend/*.js": {
+      "includeFiles": "Frontend/**"
+    }
+  }
+}
